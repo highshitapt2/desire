@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1E1A14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Desire" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <title>Desire — Fashion Wishlist</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Instrument+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+      --cream: #F5EFE4; --warm: #EDE4D5; --parch: #E2D9C8;
+      --gold: #C8A96E; --goldlt: #E8D4A8;
+      --ink: #1E1A14; --mink: #7A7168; --vellum: #FAF6EF;
+      --error: #C47878;
+      --serif: 'Playfair Display', Georgia, serif;
+      --sans: 'Instrument Sans', system-ui, sans-serif;
+      --r: 14px;
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+    }
+    html, body { height: 100%; background: var(--cream); overscroll-behavior: none; }
+    body { font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    * { scrollbar-width: none; } *::-webkit-scrollbar { display: none; }
+    #root { max-width: 430px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
+
+    .hdr { padding: calc(52px + var(--sat)) 24px 0; display: flex; align-items: flex-end; justify-content: space-between; }
+    .logo { font-family: var(--serif); font-size: 36px; font-weight: 400; font-style: italic; letter-spacing: .05em; color: var(--ink); line-height: 1; }
+    .hdr-sub { font-size: 9px; color: var(--mink); letter-spacing: .18em; text-transform: uppercase; margin-top: 4px; }
+    .hdr-stats { font-size: 10px; color: var(--mink); line-height: 1.9; font-weight: 300; text-align: right; }
+
+    .paste-wrap { padding: 18px 16px 0; }
+    .paste-bar { background: var(--ink); border-radius: var(--r); display: flex; align-items: center; gap: 8px; padding: 13px 12px 13px 18px; position: relative; overflow: hidden; }
+    .paste-bar::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(200,169,110,.6), transparent); }
+    .paste-input { flex: 1; background: transparent; border: none; outline: none; color: #fff; font-size: 14px; font-family: var(--sans); font-weight: 300; min-width: 0; }
+    .paste-input::placeholder { color: #4E4840; }
+    .paste-cta { background: linear-gradient(135deg, var(--gold), #A8842A); color: var(--ink); border: none; border-radius: 8px; padding: 9px 18px; font-size: 11px; font-family: var(--sans); font-weight: 500; letter-spacing: .08em; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+    .paste-cta:disabled { opacity: .25; }
+
+    .dots { display: flex; align-items: center; gap: 5px; padding: 0 6px; }
+    .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); animation: pulse 1.3s infinite; }
+    .dot:nth-child(2){animation-delay:.2s} .dot:nth-child(3){animation-delay:.4s}
+    @keyframes pulse { 0%,100%{opacity:.2} 50%{opacity:1} }
+
+    .cats { display: flex; gap: 6px; overflow-x: auto; padding: 18px 16px 0; }
+    .cat { flex-shrink: 0; border: 1px solid var(--parch); border-radius: 40px; padding: 5px 13px; font-size: 10px; letter-spacing: .06em; color: var(--mink); background: transparent; cursor: pointer; font-family: var(--sans); }
+    .cat.on { background: var(--ink); border-color: var(--ink); color: var(--vellum); }
+
+    .lbl { font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: var(--mink); padding: 18px 24px 12px; display: flex; justify-content: space-between; align-items: center; }
+    .lbl-back { cursor: pointer; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px 100px; }
+
+    .card { background: var(--vellum); border-radius: var(--r); overflow: hidden; border: 1px solid var(--warm); cursor: pointer; position: relative; }
+    .c-img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: var(--warm); }
+    .c-ph { width: 100%; aspect-ratio: 1; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; padding: 14px; position: relative; overflow: hidden; }
+    .c-ph-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-60%); font-size: 56px; opacity: .12; line-height: 1; }
+    .c-ph-cat { font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: #7A7168; margin-bottom: 4px; font-family: var(--sans); position: relative; }
+    .c-ph-color { font-family: var(--serif); font-style: italic; font-size: 13px; color: #3A3028; position: relative; }
+    .c-body { padding: 10px 12px 13px; }
+    .c-dom { font-size: 9px; letter-spacing: .1em; color: var(--mink); margin-bottom: 3px; }
+    .c-name { font-family: var(--serif); font-size: 14px; line-height: 1.25; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 5px; }
+    .c-row { display: flex; align-items: center; justify-content: space-between; }
+    .c-price { font-size: 12px; color: var(--mink); font-weight: 300; }
+    .c-fav { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; background: rgba(250,246,239,.88); backdrop-filter: blur(6px); border: none; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+    .c-badge { position: absolute; top: 8px; left: 8px; background: rgba(250,246,239,.88); backdrop-filter: blur(6px); border-radius: 40px; padding: 3px 8px; font-size: 9px; color: var(--ink); }
+
+    .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 48px 80px; text-align: center; gap: 14px; }
+    .empty-g { font-family: var(--serif); font-size: 72px; color: var(--warm); line-height: 1; }
+    .empty-h { font-family: var(--serif); font-size: 22px; font-style: italic; color: var(--ink); }
+    .empty-p { font-size: 11.5px; color: var(--mink); line-height: 1.7; font-weight: 300; }
+
+    .nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: rgba(245,239,228,.95); backdrop-filter: blur(16px); border-top: 1px solid var(--warm); display: flex; justify-content: space-around; padding: 10px 0 calc(18px + var(--sab)); z-index: 50; }
+    .nb { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; cursor: pointer; padding: 4px 16px; color: var(--mink); font-family: var(--sans); }
+    .nb.on { color: var(--ink); }
+    .nb-icon { font-size: 18px; line-height: 1; }
+    .nb-lbl { font-size: 8px; letter-spacing: .13em; text-transform: uppercase; }
+
+    .overlay { position: fixed; inset: 0; background: rgba(30,26,20,.5); z-index: 200; backdrop-filter: blur(5px); animation: fadeIn .22s ease; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .sheet { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: var(--vellum); border-radius: 24px 24px 0 0; z-index: 201; animation: slideUp .3s cubic-bezier(.34,1.1,.64,1); }
+    @keyframes slideUp { from{transform:translateX(-50%) translateY(100%)} to{transform:translateX(-50%) translateY(0)} }
+    .sh-handle { width: 40px; height: 3px; background: var(--warm); border-radius: 2px; margin: 14px auto 0; flex-shrink: 0; }
+    .sh-scroll { overflow-y: auto; max-height: 92dvh; }
+    .sh-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; margin-top: 16px; background: var(--warm); }
+    .sh-ph { width: 100%; aspect-ratio: 3/4; display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; padding: 28px; position: relative; overflow: hidden; margin-top: 16px; }
+    .sh-ph-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-60%); font-size: 110px; opacity: .1; line-height: 1; }
+    .sh-body { padding: 20px 24px 44px; }
+    .sh-badge { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--parch); border-radius: 40px; padding: 4px 12px; font-size: 9px; letter-spacing: .14em; color: var(--mink); margin-bottom: 12px; }
+    .sh-title { font-family: var(--serif); font-size: 24px; line-height: 1.2; color: var(--ink); margin-bottom: 4px; }
+    .sh-brand { font-size: 11px; color: var(--mink); font-weight: 300; margin-bottom: 4px; }
+    .sh-meta { display: flex; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+    .sh-meta-pill { font-size: 10px; color: var(--mink); }
+    .sh-meta-pill b { color: var(--ink); font-weight: 400; }
+    .sh-tagline { font-family: var(--serif); font-style: italic; font-size: 14px; color: var(--mink); margin-bottom: 18px; line-height: 1.45; }
+    .sh-price { font-family: var(--serif); font-size: 32px; color: var(--ink); margin-bottom: 22px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .sh-domain { font-size: 10px; color: var(--mink); font-weight: 300; font-family: var(--sans); }
+    .sh-actions { display: flex; flex-direction: column; gap: 9px; }
+    .btn-primary { background: linear-gradient(160deg, #2A2520, var(--ink)); color: var(--vellum); border: none; border-radius: 13px; padding: 17px; font-size: 11.5px; font-family: var(--sans); font-weight: 500; letter-spacing: .1em; cursor: pointer; text-decoration: none; display: block; text-align: center; position: relative; overflow: hidden; }
+    .btn-primary::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(200,169,110,.5), transparent); }
+    .btn-ghost { background: transparent; border: 1px solid var(--parch); border-radius: 13px; padding: 14px; font-size: 11px; font-family: var(--sans); letter-spacing: .08em; color: var(--mink); cursor: pointer; width: 100%; }
+    .btn-danger { background: transparent; border: none; padding: 14px; font-size: 11px; font-family: var(--sans); letter-spacing: .08em; color: var(--error); cursor: pointer; width: 100%; }
+    .divider { height: 1px; background: var(--warm); margin: 18px 0; }
+    .col-label { font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: var(--mink); margin-bottom: 10px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+    .chip { border: 1px solid var(--parch); border-radius: 40px; padding: 5px 13px; font-size: 10px; color: var(--mink); background: transparent; cursor: pointer; font-family: var(--sans); }
+    .chip.on { background: var(--ink); border-color: var(--ink); color: var(--vellum); }
+    .new-col-row { display: flex; gap: 7px; margin-top: 6px; }
+    .new-col-inp { flex: 1; background: var(--warm); border: none; border-radius: 9px; padding: 9px 12px; font-size: 11px; font-family: var(--sans); color: var(--ink); outline: none; }
+    .new-col-inp::placeholder { color: var(--mink); }
+    .new-col-btn { background: var(--ink); color: var(--vellum); border: none; border-radius: 9px; padding: 9px 14px; font-size: 11px; cursor: pointer; }
+    .col-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px 100px; }
+    .col-card { background: var(--warm); border-radius: var(--r); padding: 22px 18px; cursor: pointer; border: 1px solid var(--goldlt); }
+    .col-name { font-family: var(--serif); font-size: 18px; color: var(--ink); margin-bottom: 5px; line-height: 1.2; }
+    .col-cnt { font-size: 10px; color: var(--mink); font-weight: 300; }
+    .col-new { background: transparent; border: 1px dashed var(--parch); border-radius: var(--r); padding: 22px 18px; font-size: 11px; font-family: var(--sans); color: var(--mink); cursor: pointer; text-align: left; width: 100%; }
+    .toast { position: fixed; bottom: calc(88px + var(--sab)); left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--vellum); font-size: 10.5px; letter-spacing: .1em; padding: 10px 22px; border-radius: 40px; z-index: 999; pointer-events: none; white-space: nowrap; animation: fadeIn .2s ease; }
+
+    /* Install prompt */
+    .install-banner { margin: 12px 16px 0; background: var(--ink); border-radius: var(--r); padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+    .install-text { flex: 1; font-size: 11px; color: rgba(255,255,255,.7); line-height: 1.4; }
+    .install-text b { color: #fff; display: block; margin-bottom: 2px; font-weight: 500; }
+    .install-btn { background: var(--gold); color: var(--ink); border: none; border-radius: 8px; padding: 7px 14px; font-size: 10px; font-family: var(--sans); font-weight: 500; cursor: pointer; white-space: nowrap; }
+    .install-close { background: none; border: none; color: rgba(255,255,255,.4); font-size: 16px; cursor: pointer; padding: 0 4px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+// ── Constants ────────────────────────────────────
+const STORAGE_KEY = "desire_v1";
+const CATS = ["All","Dresses","Tops","Bottoms","Outerwear","Footwear","Bags","Jewellery","Accessories","Activewear","Beauty","Other"];
+const CAT_ICON = { All:"✦",Dresses:"👗",Tops:"👕",Bottoms:"👖",Outerwear:"🧥",Footwear:"👟",Bags:"👜",Jewellery:"💍",Accessories:"🧣",Activewear:"🏃",Beauty:"🌷",Other:"✦" };
+const CAT_COLOR = { Dresses:"#C4A882",Tops:"#A8B4C4",Bottoms:"#9BA89E",Outerwear:"#B8A898",Footwear:"#C4B4A0",Bags:"#D4B896",Jewellery:"#D4C4A0",Accessories:"#B4B8C4",Activewear:"#A4B8A8",Beauty:"#C4A8A8",Other:"#B8B8B8" };
+const CAT_KEYWORDS = {
+  Dresses:["dress","gown","maxi","midi","sundress","bodycon","frock","saree","lehenga"],
+  Tops:["top","blouse","shirt","tee","t-shirt","crop","tank","tunic","cami","sweater","knitwear","pullover","sweatshirt","hoodie","kurta"],
+  Bottoms:["pant","trouser","jean","denim","skirt","shorts","legging","jogger","cargo","pallazo"],
+  Outerwear:["jacket","coat","blazer","trench","parka","bomber","cardigan","vest","shrug"],
+  Footwear:["shoe","boot","heel","sneaker","sandal","loafer","mule","pump","flat","trainer","slipper","kolhapuri","jutties"],
+  Bags:["bag","handbag","tote","clutch","crossbody","backpack","purse","wallet","potli"],
+  Jewellery:["ring","necklace","earring","bracelet","watch","pendant","chain","choker","anklet","bangles","mangalsutra"],
+  Accessories:["scarf","belt","hat","cap","beanie","sunglasses","dupatta","stole"],
+  Activewear:["activewear","sports bra","gym","yoga","workout","swimwear","bikini"],
+  Beauty:["fragrance","perfume","serum","moisturiser","moisturizer","cream","lipstick","makeup","skincare","kajal"],
+};
+
+function guessCategory(text) {
+  const s = (text||"").toLowerCase();
+  for (const [cat, kws] of Object.entries(CAT_KEYWORDS))
+    if (kws.some(k => s.includes(k))) return cat;
+  return "Other";
+}
+
+// ── State ────────────────────────────────────────
+let state = {
+  items: [],
+  collections: [
+    { id:"c1", name:"Summer Wardrobe" },
+    { id:"c2", name:"Evening Looks"   },
+    { id:"c3", name:"Wishlist"        },
+  ],
+  tab: "home",
+  cat: "All",
+  colView: null,
+  preview: null,
+  detail: null,
+  loading: false,
+  toast: null,
+  url: "",
+  showInstall: false,
+  deferredPrompt: null,
+};
+
+// Load from localStorage
+try {
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+  if (saved.items) state.items = saved.items;
+  if (saved.collections) state.collections = saved.collections;
+} catch {}
+
+function persist() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ items: state.items, collections: state.collections })); } catch {}
+}
+
+// ── Fetch product via backend ────────────────────
+async function fetchProduct(rawUrl) {
+  const url = rawUrl.trim().startsWith("http") ? rawUrl.trim() : "https://" + rawUrl.trim();
+  let domain = "";
+  try { domain = new URL(url).hostname.replace("www.","").replace("www2.",""); } catch {}
+
+  // Scrape og:image, title, price from page via serverless function
+  let scraped = {};
+  try {
+    const r = await fetch("/api/scrape", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url })
+    });
+    scraped = await r.json();
+  } catch {}
+
+  // Clean up title — strip store name suffixes like "| Myntra", "- Amazon.in" etc.
+  let title = (scraped.title || "").replace(/[\|\-–—].*$/, "").trim().slice(0, 80) || domain;
+
+  // Extract brand from domain e.g. "myntra.com" → "Myntra"
+  const brand = scraped.brand || domain.split(".")[0].replace(/-/g," ").replace(/\b\w/g, c => c.toUpperCase());
+
+  // Format price
+  let price = "";
+  if (scraped.price) {
+    const num = parseFloat(String(scraped.price).replace(/[^0-9.]/g,""));
+    const cur = String(scraped.price).replace(/[0-9.,\s]/g,"").trim();
+    if (!isNaN(num)) price = (cur || "₹") + " " + num.toLocaleString("en-IN");
+  }
+
+  // Detect category from title + URL
+  const category = guessCategory(title + " " + url);
+
+  // Extract color from title if present
+  const colorWords = ["black","white","red","blue","green","yellow","pink","purple","orange","brown","grey","gray","beige","cream","ivory","navy","maroon","olive","coral","teal","indigo","lavender","mint","nude","rust","mustard","sage","cobalt","emerald","denim"];
+  const titleLower = title.toLowerCase();
+  const color = colorWords.find(c => titleLower.includes(c)) || "";
+  const colorFormatted = color ? color.charAt(0).toUpperCase() + color.slice(1) : "";
+
+  return {
+    url,
+    domain,
+    image: scraped.image || null,
+    title,
+    brand,
+    price,
+    category,
+    color: colorFormatted,
+    material: "",
+    tagline: "",
+  };
+}
+
+// ── Render helpers ───────────────────────────────
+function img(item, cls) {
+  if (item.image) {
+    return `<img class="${cls}" src="${escHtml(item.image)}" alt="${escHtml(item.title||'')}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="${cls.replace('-img','-ph')}" style="display:none;background:linear-gradient(160deg,${CAT_COLOR[item.category]||'#C4A882'}22 0%,${CAT_COLOR[item.category]||'#C4A882'}55 100%)"><div class="${cls.replace('-img','-ph-icon')}">${CAT_ICON[item.category]||'✦'}</div><div class="${cls.replace('-img','-ph-cat')}">${escHtml(item.category)}</div><div class="${cls.replace('-img','-ph-color')}">${escHtml(item.color||item.brand||'')}</div></div>`;
+  }
+  const accent = CAT_COLOR[item.category] || '#C4A882';
+  return `<div class="${cls.replace('-img','-ph')}" style="background:linear-gradient(160deg,${accent}22 0%,${accent}55 100%)"><div class="${cls.replace('-img','-ph-icon')}">${CAT_ICON[item.category]||'✦'}</div><div class="${cls.replace('-img','-ph-cat')}">${escHtml(item.category)}</div><div class="${cls.replace('-img','-ph-color')}">${escHtml(item.color||item.brand||'')}</div></div>`;
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toast(msg) {
+  state.toast = msg;
+  render();
+  setTimeout(() => { state.toast = null; render(); }, 2600);
+}
+
+// ── Render ───────────────────────────────────────
+function render() {
+  const s = state;
+  let shown = [...s.items];
+  if (s.tab === "favs") shown = shown.filter(i => i.fav);
+  if (s.tab === "collections" && s.colView) shown = shown.filter(i => (i.colIds||[]).includes(s.colView));
+  if (s.tab === "home" && s.cat !== "All") shown = shown.filter(i => i.category === s.cat);
+  const usedCats = ["All", ...CATS.slice(1).filter(c => s.items.some(i => i.category === c))];
+  const total = s.items.reduce((sum,i) => sum + parseFloat((i.price||"0").replace(/[^0-9.]/g,"")), 0);
+
+  let html = `
+    <div class="hdr">
+      <div><div class="logo">desire</div><div class="hdr-sub">fashion wishlist</div></div>
+      <div class="hdr-stats">${s.items.length} ${s.items.length===1?"piece":"pieces"}<br>${total>0?"≈ ₹"+Math.round(total).toLocaleString("en-IN")+" total":""}</div>
+    </div>`;
+
+  // Install banner
+  if (s.showInstall) {
+    html += `<div class="install-banner">
+      <div class="install-text"><b>Add Desire to your home screen</b>Save items directly from Myntra, Meesho &amp; more</div>
+      <button class="install-btn" onclick="installApp()">Install</button>
+      <button class="install-close" onclick="dismissInstall()">×</button>
+    </div>`;
+  }
+
+  // Paste bar
+  html += `<div class="paste-wrap"><div class="paste-bar">
+    <input class="paste-input" id="urlInput" placeholder="paste any product link to preview…" value="${escHtml(s.url)}" />
+    ${s.loading
+      ? `<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`
+      : `<button class="paste-cta" id="previewBtn" ${!s.url.trim()?"disabled":""}>Preview</button>`}
+  </div></div>`;
+
+  // HOME
+  if (s.tab === "home") {
+    if (usedCats.length > 1) {
+      html += `<div class="cats">${usedCats.map(c =>
+        `<button class="cat${s.cat===c?" on":""}" onclick="setCat('${c}')">${c==="All"?"all":`${CAT_ICON[c]} ${c.toLowerCase()}`}</button>`
+      ).join("")}</div>`;
+    }
+    if (shown.length === 0) {
+      html += `<div class="empty"><div class="empty-g">◌</div><div class="empty-h">your desires await</div><div class="empty-p">Paste any fashion link above<br>and preview it before saving.</div></div>`;
+    } else {
+      html += `<div class="lbl">${s.cat==="All"?"all desires":`${CAT_ICON[s.cat]} ${s.cat.toLowerCase()}`}</div>`;
+      html += `<div class="grid">${shown.map(item => renderCard(item)).join("")}</div>`;
+    }
+  }
+
+  // FAVS
+  if (s.tab === "favs") {
+    if (shown.length === 0) {
+      html += `<div class="empty"><div class="empty-g">♡</div><div class="empty-h">no favourites yet</div><div class="empty-p">Tap ♡ on any item to save it here.</div></div>`;
+    } else {
+      html += `<div class="lbl">favourites</div><div class="grid">${shown.map(item => renderCard(item)).join("")}</div>`;
+    }
+  }
+
+  // COLLECTIONS
+  if (s.tab === "collections") {
+    if (!s.colView) {
+      html += `<div class="lbl">collections</div><div class="col-grid">
+        ${s.collections.map(c => `<div class="col-card" onclick="openCol('${c.id}')"><div class="col-name">${escHtml(c.name)}</div><div class="col-cnt">${s.items.filter(i=>(i.colIds||[]).includes(c.id)).length} pieces</div></div>`).join("")}
+        <button class="col-new" onclick="newCollection()">+ new collection</button>
+      </div>`;
+    } else {
+      const col = s.collections.find(c => c.id === s.colView);
+      html += `<div class="lbl">${escHtml(col?.name||"")}<span class="lbl-back" onclick="closeCol()">← back</span></div>`;
+      if (shown.length === 0) {
+        html += `<div class="empty"><div class="empty-g">◌</div><div class="empty-p">no pieces yet</div></div>`;
+      } else {
+        html += `<div class="grid">${shown.map(item => renderCard(item)).join("")}</div>`;
+      }
+    }
+  }
+
+  // Nav
+  html += `<nav class="nav">
+    ${[{id:"home",icon:"◻",lbl:"desires"},{id:"favs",icon:"♡",lbl:"favourites"},{id:"collections",icon:"⊟",lbl:"collections"}].map(n =>
+      `<button class="nb${s.tab===n.id?" on":""}" onclick="setTab('${n.id}')"><span class="nb-icon">${n.icon}</span><span class="nb-lbl">${n.lbl}</span></button>`
+    ).join("")}
+  </nav>`;
+
+  // Toast
+  if (s.toast) html += `<div class="toast">${escHtml(s.toast)}</div>`;
+
+  document.getElementById("root").innerHTML = html;
+
+  // Re-attach input events
+  const inp = document.getElementById("urlInput");
+  if (inp) {
+    inp.addEventListener("input", e => { state.url = e.target.value; document.getElementById("previewBtn") && (document.getElementById("previewBtn").disabled = !e.target.value.trim()); });
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") triggerFetch(state.url); });
+  }
+  const btn = document.getElementById("previewBtn");
+  if (btn) btn.addEventListener("click", () => triggerFetch(state.url));
+
+  // Sheets (rendered outside #root to avoid re-render clobbering)
+  renderSheets();
+}
+
+function renderCard(item) {
+  return `<div class="card" onclick="openDetail('${item.id}')">
+    ${img(item, "c-img")}
+    <div class="c-badge">${CAT_ICON[item.category]}</div>
+    <button class="c-fav" onclick="event.stopPropagation();toggleFav('${item.id}')">${item.fav?"♥":"♡"}</button>
+    <div class="c-body">
+      <div class="c-dom">${escHtml(item.domain)}</div>
+      <div class="c-name">${escHtml(item.title)}</div>
+      <div class="c-row"><div class="c-price">${escHtml(item.price||"")}</div></div>
+    </div>
+  </div>`;
+}
+
+// ── Sheets (portal pattern) ──────────────────────
+let sheetsEl;
+function getSheetsEl() {
+  if (!sheetsEl) { sheetsEl = document.createElement("div"); sheetsEl.id = "sheets"; document.body.appendChild(sheetsEl); }
+  return sheetsEl;
+}
+
+function renderSheets() {
+  const s = state;
+  let html = "";
+
+  if (s.preview) html += renderPreviewSheet(s.preview);
+  else if (s.detail) {
+    const live = s.items.find(i => i.id === s.detail);
+    if (live) html += renderDetailSheet(live);
+  }
+
+  getSheetsEl().innerHTML = html;
+
+  // Attach sheet input events
+  const nc = document.getElementById("shNewColInp");
+  if (nc) nc.addEventListener("keydown", e => { if (e.key === "Enter") addColFromSheet(); });
+  const mi = document.getElementById("shManualImg");
+  if (mi) mi.addEventListener("input", e => { state._manualImg = e.target.value; });
+  const mi2 = document.getElementById("shManualImg2");
+  if (mi2) mi2.addEventListener("input", e => { state._manualImg2 = e.target.value; });
+}
+
+function renderPreviewSheet(p) {
+  const imgHtml = (p.image || state._manualImg)
+    ? `<img class="sh-img" src="${escHtml(state._manualImg || p.image)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="sh-ph" style="display:none;background:linear-gradient(160deg,${CAT_COLOR[p.category]||'#C4A882'}22 0%,${CAT_COLOR[p.category]||'#C4A882'}55 100%)"><div class="sh-ph-icon">${CAT_ICON[p.category]||'✦'}</div><div class="sh-ph-cat">${escHtml(p.category)}</div><div class="sh-ph-color">${escHtml(p.color||'')}</div></div>`
+    : `<div class="sh-ph" style="background:linear-gradient(160deg,${CAT_COLOR[p.category]||'#C4A882'}22 0%,${CAT_COLOR[p.category]||'#C4A882'}55 100%)"><div class="sh-ph-icon">${CAT_ICON[p.category]||'✦'}</div><div class="sh-ph-cat">${escHtml(p.category)}</div><div class="sh-ph-color">${escHtml(p.color||'')}</div></div>`;
+
+  const picked = state._picked || [];
+  return `
+    <div class="overlay" onclick="dismissPreview()"></div>
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-scroll">
+        ${imgHtml}
+        <div class="sh-body">
+          <div class="sh-badge">${CAT_ICON[p.category]} ${escHtml(p.category)}</div>
+          <div class="sh-title">${escHtml(p.title||"")}</div>
+          ${p.brand ? `<div class="sh-brand">${escHtml(p.brand)}</div>` : ""}
+          ${(p.color||p.material) ? `<div class="sh-meta">${p.color?`<div class="sh-meta-pill">Color <b>${escHtml(p.color)}</b></div>`:""}${p.material?`<div class="sh-meta-pill">Material <b>${escHtml(p.material)}</b></div>`:""}</div>` : ""}
+          ${p.tagline ? `<div class="sh-tagline">"${escHtml(p.tagline)}"</div>` : ""}
+          <div class="sh-price">${escHtml(p.price||"")}<span class="sh-domain">${escHtml(p.domain)}</span></div>
+          <div class="divider"></div>
+          <div class="col-label">Save to a collection</div>
+          <div class="chips">${state.collections.map(c => `<div class="chip${picked.includes(c.id)?" on":""}" onclick="togglePickCol('${c.id}')">${escHtml(c.name)}</div>`).join("")}</div>
+          <div class="new-col-row"><input class="new-col-inp" id="shNewColInp" placeholder="new collection…" /><button class="new-col-btn" onclick="addColFromSheet()">+</button></div>
+          <div class="divider"></div>
+          <div class="sh-actions">
+            <button class="btn-primary" onclick="savePreview()">Save to desires</button>
+            <button class="btn-ghost" onclick="dismissPreview()">Discard</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderDetailSheet(item) {
+  const imgHtml = item.image
+    ? `<img class="sh-img" src="${escHtml(item.image)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="sh-ph" style="display:none;background:linear-gradient(160deg,${CAT_COLOR[item.category]||'#C4A882'}22 0%,${CAT_COLOR[item.category]||'#C4A882'}55 100%)"><div class="sh-ph-icon">${CAT_ICON[item.category]||'✦'}</div></div>`
+    : `<div class="sh-ph" style="background:linear-gradient(160deg,${CAT_COLOR[item.category]||'#C4A882'}22 0%,${CAT_COLOR[item.category]||'#C4A882'}55 100%)"><div class="sh-ph-icon">${CAT_ICON[item.category]||'✦'}</div><div class="sh-ph-cat">${escHtml(item.category)}</div><div class="sh-ph-color">${escHtml(item.color||'')}</div></div>`;
+
+  return `
+    <div class="overlay" onclick="closeDetail()"></div>
+    <div class="sheet">
+      <div class="sh-handle"></div>
+      <div class="sh-scroll">
+        ${imgHtml}
+        <div class="sh-body">
+          <div class="sh-badge">${CAT_ICON[item.category]} ${escHtml(item.category)}</div>
+          <div class="sh-title">${escHtml(item.title||"")}</div>
+          ${item.brand ? `<div class="sh-brand">${escHtml(item.brand)}</div>` : ""}
+          ${(item.color||item.material) ? `<div class="sh-meta">${item.color?`<div class="sh-meta-pill">Color <b>${escHtml(item.color)}</b></div>`:""}${item.material?`<div class="sh-meta-pill">Material <b>${escHtml(item.material)}</b></div>`:""}</div>` : ""}
+          ${item.tagline ? `<div class="sh-tagline">"${escHtml(item.tagline)}"</div>` : ""}
+          <div class="sh-price">${escHtml(item.price||"")}<span class="sh-domain">${escHtml(item.domain)}</span></div>
+          <div class="sh-actions">
+            <a class="btn-primary" href="${escHtml(item.url)}" target="_blank" rel="noreferrer">Visit store →</a>
+            <button class="btn-ghost" onclick="toggleFavDetail('${item.id}')">${item.fav?"♥  Remove from favourites":"♡  Add to favourites"}</button>
+          </div>
+          <div class="divider"></div>
+          <div class="col-label">Collections</div>
+          <div class="chips">${state.collections.map(c => `<div class="chip${(item.colIds||[]).includes(c.id)?" on":""}" onclick="toggleItemCol('${item.id}','${c.id}')">${escHtml(c.name)}</div>`).join("")}</div>
+          <div class="new-col-row"><input class="new-col-inp" id="shNewColInp" placeholder="new collection…" /><button class="new-col-btn" onclick="addColFromDetailSheet('${item.id}')">+</button></div>
+          <div class="divider"></div>
+          <button class="btn-danger" onclick="deleteItem('${item.id}')">Remove from desires</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Actions ───────────────────────────────────────
+async function triggerFetch(raw) {
+  if (!raw?.trim()) return;
+  state.loading = true; state.url = ""; state._picked = []; state._manualImg = "";
+  render();
+  try {
+    state.preview = await fetchProduct(raw);
+  } catch(e) {
+    console.error(e);
+    toast("couldn't fetch — try again");
+  }
+  state.loading = false;
+  render();
+}
+
+function savePreview() {
+  const item = { ...state.preview, colIds: state._picked||[], id:"i"+Date.now(), savedAt:Date.now(), fav:false };
+  if (state._manualImg) { item.image = state._manualImg; }
+  state.items.unshift(item);
+  state.preview = null; state._picked = []; state._manualImg = "";
+  persist(); toast("saved to desires ✦"); render();
+}
+
+function dismissPreview() { state.preview = null; state._picked = []; state._manualImg = ""; render(); }
+
+function togglePickCol(id) {
+  state._picked = state._picked || [];
+  state._picked = state._picked.includes(id) ? state._picked.filter(c=>c!==id) : [...state._picked, id];
+  renderSheets();
+}
+
+function addColFromSheet() {
+  const inp = document.getElementById("shNewColInp");
+  const name = inp?.value?.trim();
+  if (!name) return;
+  const c = { id:"c"+Date.now(), name };
+  state.collections.push(c);
+  state._picked = [...(state._picked||[]), c.id];
+  persist(); renderSheets();
+}
+
+function addColFromDetailSheet(itemId) {
+  const inp = document.getElementById("shNewColInp");
+  const name = inp?.value?.trim();
+  if (!name) return;
+  const c = { id:"c"+Date.now(), name };
+  state.collections.push(c);
+  const item = state.items.find(i=>i.id===itemId);
+  if (item) item.colIds = [...(item.colIds||[]), c.id];
+  persist(); renderSheets();
+}
+
+function openDetail(id) { state.detail = id; renderSheets(); }
+function closeDetail() { state.detail = null; renderSheets(); }
+
+function toggleFav(id) {
+  const item = state.items.find(i=>i.id===id);
+  if (item) { item.fav = !item.fav; persist(); render(); }
+}
+function toggleFavDetail(id) { toggleFav(id); renderSheets(); }
+
+function toggleItemCol(itemId, colId) {
+  const item = state.items.find(i=>i.id===itemId);
+  if (!item) return;
+  const cur = item.colIds||[];
+  item.colIds = cur.includes(colId) ? cur.filter(c=>c!==colId) : [...cur, colId];
+  persist(); renderSheets();
+}
+
+function deleteItem(id) {
+  state.items = state.items.filter(i=>i.id!==id);
+  state.detail = null; persist(); render();
+}
+
+function setTab(t) { state.tab=t; state.colView=null; render(); }
+function setCat(c) { state.cat=c; render(); }
+function openCol(id) { state.colView=id; render(); }
+function closeCol() { state.colView=null; render(); }
+
+function newCollection() {
+  const name = window.prompt("Name your collection");
+  if (name?.trim()) {
+    state.collections.push({ id:"c"+Date.now(), name:name.trim() });
+    persist(); render();
+  }
+}
+
+// ── PWA Install ───────────────────────────────────
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!localStorage.getItem("installDismissed")) {
+    state.showInstall = true; render();
+  }
+});
+
+function installApp() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; state.showInstall = false; render(); });
+  }
+}
+
+function dismissInstall() {
+  localStorage.setItem("installDismissed","1");
+  state.showInstall = false; render();
+}
+
+// ── Share target handler ──────────────────────────
+// When opened via Android share sheet: /share?url=...
+if (location.pathname === "/share") {
+  const params = new URLSearchParams(location.search);
+  const sharedUrl = params.get("url") || params.get("text") || params.get("title");
+  if (sharedUrl) {
+    history.replaceState({}, "", "/");
+    // Kick off fetch after render
+    setTimeout(() => triggerFetch(sharedUrl), 100);
+  }
+}
+
+// ── Service Worker ────────────────────────────────
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(console.error);
+}
+
+// ── Boot ─────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
