@@ -1,8 +1,21 @@
 {
   "headers": [
     {
+      "source": "/",
+      "headers": [
+        { "key": "Content-Type", "value": "text/html; charset=utf-8" }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        { "key": "Content-Type", "value": "text/html; charset=utf-8" }
+      ]
+    },
+    {
       "source": "/sw.js",
       "headers": [
+        { "key": "Content-Type", "value": "application/javascript" },
         { "key": "Cache-Control", "value": "no-cache" },
         { "key": "Service-Worker-Allowed", "value": "/" }
       ]
@@ -15,6 +28,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/((?!api|sw.js|manifest.json|icons).*)", "destination": "/index.html" }
+    { "source": "/((?!api|sw.js|manifest.json).*)", "destination": "/index.html" }
   ]
 }
